@@ -18,7 +18,7 @@ class MainFrame(object, CenteredWindow):
         self.root.iconbitmap(RAVEN_ICON)
         self.root.title('Raven ' + VERSION)
         self.root.protocol('WM_DELETE_WINDOW', self._on_close)
-        self.thinkTime = IntVar(value=5)
+        self.thinkTime = IntVar(value=1)
         self.manager = GameManager(root=self.root, parent=self)
         self.menubar = tk.Menu(self.root)
         self.create_game_menu()

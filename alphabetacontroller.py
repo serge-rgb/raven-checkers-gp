@@ -48,7 +48,7 @@ class AlphaBetaController(Controller):
         self._start_time = time.time()
         self.process.daemon = True
         self.process.start()
-        self._view.canvas.after(100, self.get_move)
+        self._view.canvas.after(10, self.get_move)
 
     def get_move(self):
         #if self._term_event.is_set() and self._model.curr_state.ok_to_move:
@@ -58,7 +58,7 @@ class AlphaBetaController(Controller):
         moved = self._parent_conn.poll()
         while (not moved and (time.time() - self._start_time)
                < self._search_time * 2):
-            self._call_id = self._view.canvas.after(500, self.get_move)
+            self._call_id = self._view.canvas.after(50, self.get_move)
             return
         self._view.canvas.after_cancel(self._call_id)
         move = self._parent_conn.recv()
