@@ -20,7 +20,7 @@ class Goal_Think(CompositeGoal):
 
     def terminate(self):
         pass
-        
+
     def arbitrate(self):
         most_desirable = None
         best_score = 0
@@ -33,6 +33,6 @@ class Goal_Think(CompositeGoal):
             most_desirable.setGoal(self.owner)
         return best_score
 
-    
 
-    
+
+

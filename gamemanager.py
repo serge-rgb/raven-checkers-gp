@@ -6,6 +6,7 @@ from globalconst import *
 from checkers import Checkers
 from boardview import BoardView
 from playercontroller import PlayerController
+from gp.gpcontroller import GPController
 from alphabetacontroller import AlphaBetaController
 from gamepersist import SavedGame
 from textserialize import Serializer
@@ -15,6 +16,8 @@ class GameManager(object):
         self.model = Checkers()
         self._root = props['root']
         self.parent = props['parent']
+        self.training = props['training']   # If true, game will be played
+                                            # against an evolved GPController
         statusbar = Label(self._root, relief=SUNKEN, font=('Helvetica',7),
                           anchor=NW)
         statusbar.pack(side='bottom', fill='x')
@@ -37,11 +40,22 @@ class GameManager(object):
                                                     view=self.view,
                                                     searchtime=think_time,
                                                     end_turn_event=self.turn_finished)
-        elif self.num_players == 1:
+        elif self.num_players == 1 and not self.training:
             # assumption here is that Black is the player
             self._controller1 = PlayerController(model=self.model,
                                                  view=self.view,
                                                  end_turn_event=self.turn_finished)
+            self._controller2 = AlphaBetaController(model=self.model,
+                                                    view=self.view,
+                                                    searchtime=think_time,
+                                                    end_turn_event=self.turn_finished)
+            # swap controllers if White is selected as the player
+            if self.player_color == WHITE:
+                self._controller1, self._controller2 = self._controller2, self._controller1
+        elif self.num_players == 1 and self.training:
+            self._controller1 = GPController(model=self.model,
+                                             view=self.view,
+                                             end_turn_event=self.turn_finished)
             self._controller2 = AlphaBetaController(model=self.model,
                                                     view=self.view,
                                                     searchtime=think_time,
