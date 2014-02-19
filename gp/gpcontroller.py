@@ -64,7 +64,7 @@ class GPController(Controller):
                 # if only one move available, take it.
                 if len(self.moves) == 1:
                     self._make_move()
-                    self._view.canvas.after(100, self._end_turn_event)
+                    self._view.canvas.after(1, self._end_turn_event)
                     return
                 self._move_in_progress = True
         else:
