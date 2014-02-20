@@ -15,7 +15,8 @@ class MainFrame(object, CenteredWindow):
     def __init__(self, master):
         self.root = master
         self.root.withdraw()
-        self.root.iconbitmap(RAVEN_ICON)
+        # This useless thing breaks linux... comment it out..
+        # self.root.iconbitmap(RAVEN_ICON)
         self.root.title('Raven ' + VERSION)
         self.root.protocol('WM_DELETE_WINDOW', self._on_close)
         self.thinkTime = IntVar(value=1)
