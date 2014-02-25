@@ -48,7 +48,7 @@ class AlphaBetaController(Controller):
         self._start_time = time.time()
         self.process.daemon = True
         self.process.start()
-        self._view.canvas.after(1, self.get_move)
+        self._view.canvas.after(0, self.get_move)
 
     def get_move(self):
         #if self._term_event.is_set() and self._model.curr_state.ok_to_move:

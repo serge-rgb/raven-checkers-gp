@@ -39,6 +39,7 @@ class GPController(Controller):
             self._view.highlight_square(h, DARK_SQUARES)
 
     def start_turn(self):
+        print 'Here is where the GP does its thinking...'
         self._register_event_handlers()
         self._model.curr_state.attach(self._view)
 
@@ -64,7 +65,7 @@ class GPController(Controller):
                 # if only one move available, take it.
                 if len(self.moves) == 1:
                     self._make_move()
-                    self._view.canvas.after(1, self._end_turn_event)
+                    self._view.canvas.after(0, self._end_turn_event)
                     return
                 self._move_in_progress = True
         else:
