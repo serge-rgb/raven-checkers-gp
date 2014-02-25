@@ -39,9 +39,12 @@ class GPController(Controller):
             self._view.highlight_square(h, DARK_SQUARES)
 
     def start_turn(self):
-        print 'Here is where the GP does its thinking...'
         self._register_event_handlers()
         self._model.curr_state.attach(self._view)
+        print 'Here is where the GP does its thinking...'
+        moves = self._model.legal_moves()
+        print 'Here are our moves: {}'.format(moves)
+        print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
 
     def end_turn(self):
         self._unregister_event_handlers()
@@ -98,6 +101,7 @@ class GPController(Controller):
 
     def _make_move(self):
         move = self.moves[0].affected_squares
+        print 'in _make_move: move is: ', move
         step = 2 if len(move) > 2 else 1
         # highlight remaining board squares used in move
         for m in move[step::step]:
