@@ -41,10 +41,17 @@ class GPController(Controller):
     def start_turn(self):
         self._register_event_handlers()
         self._model.curr_state.attach(self._view)
-        print 'Here is where the GP does its thinking...'
+
+        if self._model.terminal_test():
+            self._before_turn_event()
+            self._model.curr_state.attach(self._view)
+            return
         moves = self._model.legal_moves()
-        print 'Here are our moves: {}'.format(moves)
         print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
+        self.moves = moves
+        if len(moves) > 0:
+            self._make_move()
+        self._view.canvas.after(0, self._end_turn_event())
 
     def end_turn(self):
         self._unregister_event_handlers()
@@ -85,7 +92,7 @@ class GPController(Controller):
                     self._highlights.append(pos)
                     if len(self.moves) == 1:
                         self._make_move()
-                        self._view.canvas.after(100, self._end_turn_event)
+                        self._view.canvas.after(0, self._end_turn_event)
                         return
                     self.idx += 2 if self._model.captures_available() else 1
 
