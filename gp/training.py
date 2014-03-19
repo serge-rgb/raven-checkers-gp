@@ -5,7 +5,7 @@ class TrainingContext():
     def __init__(self):
         class ThinkTime:
             def get(self):
-                return 0
+                return 0.01
         self.thinkTime = ThinkTime()
         self.manager = GameManager(root=None, parent=self, training=True)
         self.manager.num_players = 2
