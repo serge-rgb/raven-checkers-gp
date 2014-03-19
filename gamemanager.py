@@ -23,7 +23,7 @@ class GameManager(object):
                           anchor=NW)
         statusbar.pack(side='bottom', fill='x')
         self.view = BoardView(self._root, model=self.model, parent=self,
-                              statusbar=statusbar)
+                            statusbar=statusbar, invisible=True)
         if self.training:
             self.view.override_canvas(TrainingCanvas())
         self.player_color = BLACK

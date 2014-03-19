@@ -24,6 +24,7 @@ class BoardView(Observer):
         self.dark_squares = props.get('darksquares') or DARK_SQUARES
         self.light_color = props.get('lightcheckers') or LIGHT_CHECKERS
         self.dark_color = props.get('darkcheckers') or DARK_CHECKERS
+        self.invisible = props['invisible']
         self._square_size = self._board_side / 8
         self._piece_offset = self._square_size / 5
         self._crownpic = PhotoImage(file=CROWN_IMAGE)
@@ -48,15 +49,16 @@ class BoardView(Observer):
         self.txt.grid(in_=right_panel, row=1, column=0, sticky='nsew')
         right_panel.grid_rowconfigure(1, weight=1)
         right_panel.grid_columnconfigure(0, weight=1)
-        self.init_images()
-        self.init_toolbar_buttons()
-        self.init_font_sizes(font, size)
-        self.init_tags()
-        self._register_event_handlers()
-        self.btnset = set([self.bold, self.italic, self.addLink, self.remLink])
-        self.btnmap = {'bold': self.bold, 'italic': self.italic,
-                       'bullet': self.bullets, 'number': self.numbers,
-                       'hyper': self.addLink}
+        if not self.invisible:
+            self.init_images()
+            self.init_toolbar_buttons()
+            self.init_font_sizes(font, size)
+            self.init_tags()
+            self._register_event_handlers()
+            self.btnset = set([self.bold, self.italic, self.addLink, self.remLink])
+            self.btnmap = {'bold': self.bold, 'italic': self.italic,
+                           'bullet': self.bullets, 'number': self.numbers,
+                           'hyper': self.addLink}
         self.hypermgr = HyperlinkManager(self.txt, self._gameMgr.load_game)
         self.serializer = Serializer(self.txt, self.hypermgr)
         self.curr_annotation = ''

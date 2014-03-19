@@ -16,7 +16,8 @@ class AlphaBetaController(Controller):
         self._highlights = []
         self._search_time = props['searchtime'] # in seconds
         self._before_turn_event = None
-        self._parent_conn, self._conn = multiprocessing.Pipe()
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            self._parent_conn, self._conn = multiprocessing.Pipe()
         self._term_event = multiprocessing.Event()
         self.process = multiprocessing.Process()
         self._start_time = None
@@ -40,12 +41,13 @@ class AlphaBetaController(Controller):
             self._model.curr_state.attach(self._view)
             return
         self._view.update_statusbar('Thinking ...')
-        self.process = multiprocessing.Process(target=calc_move,
-                                               args=(self._model,
-                                                     self._trans_table,
-                                                     self._search_time,
-                                                     self._term_event,
-                                                     self._conn))
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            self.process = multiprocessing.Process(target=calc_move,
+                                                   args=(self._model,
+                                                         self._trans_table,
+                                                         self._search_time,
+                                                         self._term_event,
+                                                         self._conn))
         self._start_time = time.time()
         if not isinstance(self._view.canvas, TrainingCanvas):
             self.process.daemon = True
