@@ -4,6 +4,7 @@ from Tkconstants import END, N, S, E, W
 from command import *
 from observer import *
 from globalconst import *
+from gp.trainingcanvas import TrainingCanvas
 from autoscrollbar import AutoScrollbar
 from textserialize import Serializer
 from hyperlinkmgr import HyperlinkManager
@@ -344,7 +345,8 @@ class BoardView(Observer):
     def highlight_square(self, idx, color):
         row, col = self._gridpos[idx]
         hpos = col + row * 8
-        self.canvas.itemconfigure('o'+str(hpos), outline=color)
+        if not isinstance(self.canvas, TrainingCanvas):
+            self.canvas.itemconfigure('o'+str(hpos), outline=color)
 
     def calc_valid_xy(self, x, y):
         return (min(max(0, self.canvas.canvasx(x)), self._board_side-1),
@@ -393,7 +395,8 @@ class BoardView(Observer):
     def update_statusbar(self, output=None):
         if output:
             self._statusbar['text'] = output
-            self.root.update()
+            if self.root:
+                self.root.update()
             return
 
         if self._model.terminal_test():
@@ -466,7 +469,8 @@ class BoardView(Observer):
         if change == None:
             return
         for i in change.remove:
-            self.canvas.delete('c'+str(i))
+            if not isinstance(self.canvas, TrainingCanvas):
+                self.canvas.delete('c'+str(i))
         for i in change.add:
             checker = self._model.curr_state.squares[i]
             color = self.dark_color if checker & COLORS == BLACK else self.light_color
@@ -474,12 +478,17 @@ class BoardView(Observer):
             x = col * self._square_size + self._piece_offset
             y = row * self._square_size + self._piece_offset
             tag = 'c'+str(i)
-            self.canvas.create_oval(x+2, y+2, x+2+CHECKER_SIZE,
-                                    y+2+CHECKER_SIZE, outline='black',
-                                    fill='black', tags=(color, tag))
-            self.canvas.create_oval(x, y, x+CHECKER_SIZE, y+CHECKER_SIZE,
-                                    outline='black', fill=color,
-                                    tags=(color, tag))
-            if checker & KING:
-                self.canvas.create_image(x+15, y+15, image=self._crownpic,
-                                         anchor=CENTER, tags=(color, tag))
+            if not isinstance(self.canvas, TrainingCanvas):
+                self.canvas.create_oval(x+2, y+2, x+2+CHECKER_SIZE,
+                                        y+2+CHECKER_SIZE, outline='black',
+                                        fill='black', tags=(color, tag))
+                self.canvas.create_oval(x, y, x+CHECKER_SIZE, y+CHECKER_SIZE,
+                                        outline='black', fill=color,
+                                        tags=(color, tag))
+                if checker & KING:
+                    self.canvas.create_image(x+15, y+15, image=self._crownpic,
+                                             anchor=CENTER, tags=(color, tag))
+
+    def override_canvas(self, canvas):
+        self.canvas = canvas
+

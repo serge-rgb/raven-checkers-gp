@@ -4,6 +4,7 @@ import multiprocessing
 import time
 import random
 from controller import Controller
+from gp.trainingcanvas import TrainingCanvas
 from transpositiontable import TranspositionTable
 from globalconst import *
 
@@ -15,7 +16,7 @@ class AlphaBetaController(Controller):
         self._highlights = []
         self._search_time = props['searchtime'] # in seconds
         self._before_turn_event = None
-        self._parent_conn, self._child_conn = multiprocessing.Pipe()
+        self._parent_conn, self._conn = multiprocessing.Pipe()
         self._term_event = multiprocessing.Event()
         self.process = multiprocessing.Process()
         self._start_time = None
@@ -44,25 +45,31 @@ class AlphaBetaController(Controller):
                                                      self._trans_table,
                                                      self._search_time,
                                                      self._term_event,
-                                                     self._child_conn))
+                                                     self._conn))
         self._start_time = time.time()
-        self.process.daemon = True
-        self.process.start()
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            self.process.daemon = True
+            self.process.start()
         self._view.canvas.after(0, self.get_move)
 
     def get_move(self):
         #if self._term_event.is_set() and self._model.curr_state.ok_to_move:
         #    self._end_turn_event()
         #    return
-        self._highlights = []
-        moved = self._parent_conn.poll()
-        while (not moved and (time.time() - self._start_time)
-               < self._search_time * 2):
-            self._call_id = self._view.canvas.after(1, self.get_move)
-            return
-        self._view.canvas.after_cancel(self._call_id)
-        move = self._parent_conn.recv()
-        #if self._model.curr_state.ok_to_move:
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            self._highlights = []
+            moved = self._parent_conn.poll()
+            while (not moved and (time.time() - self._start_time)
+                   < self._search_time * 2):
+                self._call_id = self._view.canvas.after(1, self.get_move)
+                return
+            if not isinstance(self._view.canvas, TrainingCanvas):
+                self._view.canvas.after_cancel(self._call_id)
+            move = self._parent_conn.recv()
+        # ----------------------------------------------------------------------
+        else:  # We actually want to go fast
+            move = calc_move(self._model, self._trans_table, self._search_time, self._term_event, None)
+            #if self._model.curr_state.ok_to_move:
         self._before_turn_event()
 
         # highlight remaining board squares used in move
@@ -84,7 +91,8 @@ class AlphaBetaController(Controller):
 
     def stop_process(self):
         self._term_event.set()
-        self._view.canvas.after_cancel(self._call_id)
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            self._view.canvas.after_cancel(self._call_id)
 
     def end_turn(self):
         self._view.update_statusbar()
@@ -100,12 +108,12 @@ def longest_of(moves):
             selected = move
     return selected
 
-def calc_move(model, table, search_time, term_event, child_conn):
+def calc_move(model, table, search_time, term_event, conn):
     move = None
     term_event.clear()
     captures = model.captures_available()
     if captures:
-        time.sleep(0.7)
+        time.sleep(0)
         move = longest_of(captures)
     else:
         depth = 0
@@ -130,5 +138,8 @@ def calc_move(model, table, search_time, term_event, child_conn):
                ((curr_time - checkpoint) * 2) > rem_time or
                depth > MAXDEPTH):
                 break
-    child_conn.send(move)
+    if conn:
+        conn.send(move)
+    else:
+        return move
     #model.curr_state.ok_to_move = True

@@ -1,6 +1,7 @@
 from Tkinter import Widget
 from controller import Controller
 from globalconst import *
+from gp.trainingcanvas import TrainingCanvas
 
 class GPController(Controller):
     def __init__(self, **props):
@@ -13,10 +14,12 @@ class GPController(Controller):
         print 'Hello there! I am a GPController'
 
     def _register_event_handlers(self):
-        Widget.bind(self._view.canvas, '<Button-1>', self.mouse_click)
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            Widget.bind(self._view.canvas, '<Button-1>', self.mouse_click)
 
     def _unregister_event_handlers(self):
-        Widget.unbind(self._view.canvas, '<Button-1>')
+        if not isinstance(self._view.canvas, TrainingCanvas):
+            Widget.unbind(self._view.canvas, '<Button-1>')
 
     def stop_process(self):
         pass
@@ -81,7 +84,7 @@ class GPController(Controller):
         else:
             if sq & FREE:
                 self.moves = self._filter_moves(pos, self.moves, self.idx)
-                if len(self.moves) == 0: # illegal move
+                if len(self.moves) == 0:  # illegal move
                     # remove previous square highlights
                     for h in self._highlights:
                         self._view.highlight_square(h, DARK_SQUARES)

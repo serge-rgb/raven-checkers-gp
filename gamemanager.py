@@ -7,6 +7,7 @@ from checkers import Checkers
 from boardview import BoardView
 from playercontroller import PlayerController
 from gp.gpcontroller import GPController
+from gp.trainingcanvas import TrainingCanvas
 from alphabetacontroller import AlphaBetaController
 from gamepersist import SavedGame
 from textserialize import Serializer
@@ -23,6 +24,8 @@ class GameManager(object):
         statusbar.pack(side='bottom', fill='x')
         self.view = BoardView(self._root, model=self.model, parent=self,
                               statusbar=statusbar)
+        if self.training:
+            self.view.override_canvas(TrainingCanvas())
         self.player_color = BLACK
         self.num_players = 1
         self.set_controllers()
@@ -212,11 +215,13 @@ class GameManager(object):
     def turn_finished(self):
         if self.model.curr_state.to_move == BLACK:
             self._controller2.end_turn() # end White's turn
-            self._root.update()
+            if self._root:
+                self._root.update()
             self.view.update_statusbar()
             self._controller1.start_turn() # begin Black's turn
         else:
             self._controller1.end_turn() # end Black's turn
-            self._root.update()
+            if self._root:
+                self._root.update()
             self.view.update_statusbar()
             self._controller2.start_turn() # begin White's turn
