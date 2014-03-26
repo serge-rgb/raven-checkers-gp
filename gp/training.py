@@ -8,7 +8,6 @@ class TrainingContext():
                 return 0.01
         self.thinkTime = ThinkTime()
         self.manager = GameManager(root=None, parent=self, training=True)
-        self.manager.num_players = 2
 
 
 def train(ctx):

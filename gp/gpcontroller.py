@@ -11,11 +11,9 @@ class GPController(Controller):
         self._end_turn_event = props['end_turn_event']
         self._highlights = []
         self._move_in_progress = False
-        print 'Hello there! I am a GPController'
 
     def _register_event_handlers(self):
-        if not isinstance(self._view.canvas, TrainingCanvas):
-            Widget.bind(self._view.canvas, '<Button-1>', self.mouse_click)
+        pass
 
     def _unregister_event_handlers(self):
         if not isinstance(self._view.canvas, TrainingCanvas):
@@ -60,45 +58,6 @@ class GPController(Controller):
         self._unregister_event_handlers()
         self._model.curr_state.detach(self._view)
 
-    def mouse_click(self, event):
-        xi, yi = self._view.calc_board_loc(event.x, event.y)
-        pos = self._view.calc_board_pos(xi, yi)
-        sq = self._model.curr_state.squares[pos]
-        if not self._move_in_progress:
-            player = self._model.curr_state.to_move
-            self.moves = self._model.legal_moves()
-            if (sq & player) and self.moves:
-                self._before_turn_event()
-                # highlight the start square the user clicked on
-                self._view.highlight_square(pos, OUTLINE_COLOR)
-                self._highlights = [pos]
-                # reduce moves to number matching the positions entered
-                self.moves = self._filter_moves(pos, self.moves, 0)
-                self.idx = 2 if self._model.captures_available() else 1
-                # if only one move available, take it.
-                if len(self.moves) == 1:
-                    self._make_move()
-                    self._view.canvas.after(0, self._end_turn_event)
-                    return
-                self._move_in_progress = True
-        else:
-            if sq & FREE:
-                self.moves = self._filter_moves(pos, self.moves, self.idx)
-                if len(self.moves) == 0:  # illegal move
-                    # remove previous square highlights
-                    for h in self._highlights:
-                        self._view.highlight_square(h, DARK_SQUARES)
-                    self._move_in_progress = False
-                    return
-                else:
-                    self._view.highlight_square(pos, OUTLINE_COLOR)
-                    self._highlights.append(pos)
-                    if len(self.moves) == 1:
-                        self._make_move()
-                        self._view.canvas.after(0, self._end_turn_event)
-                        return
-                    self.idx += 2 if self._model.captures_available() else 1
-
 
     def _filter_moves(self, pos, moves, idx):
         del_list = []
@@ -108,6 +67,7 @@ class GPController(Controller):
         for i in reversed(del_list):
             del moves[i]
         return moves
+
 
     def _make_move(self):
         move = self.moves[0].affected_squares
