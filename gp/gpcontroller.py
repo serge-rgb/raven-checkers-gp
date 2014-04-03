@@ -2,6 +2,10 @@ from Tkinter import Widget
 from controller import Controller
 from globalconst import *
 from gp.trainingcanvas import TrainingCanvas
+from gp.criteria import *
+
+
+# ASSUMPTION: GPController is black.
 
 class GPController(Controller):
     def __init__(self, **props):
@@ -48,7 +52,6 @@ class GPController(Controller):
             self._model.curr_state.attach(self._view)
             return
         moves = self._model.legal_moves()
-        print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
         self.moves = moves
         if len(moves) > 0:
             self._make_move()
@@ -71,13 +74,14 @@ class GPController(Controller):
 
     def _make_move(self):
         move = self.moves[0].affected_squares
-        print 'in _make_move: move is: ', move
+        print '===== GP MOVE'
+        print 'opposition critierion: ', gp_opposition(self._model)
+        print 'captures criterion: ', gp_num_of_captures(self._model)
+        print 'freedom criterion: ', gp_total_freedom(self._model)
+        print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
+        print 'move repr is: ', self.moves[0]
         step = 2 if len(move) > 2 else 1
         # highlight remaining board squares used in move
-        for m in move[step::step]:
-            idx = m[0]
-            self._view.highlight_square(idx, OUTLINE_COLOR)
-            self._highlights.append(idx)
         self._model.make_move(self.moves[0], None, True, True,
                               self._view.get_annotation())
         # a new move obliterates any more redo's along a branch of the game tree
