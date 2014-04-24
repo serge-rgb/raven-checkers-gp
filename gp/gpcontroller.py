@@ -48,6 +48,7 @@ class GPController(Controller):
         self._model.curr_state.attach(self._view)
 
         if self._model.terminal_test():
+            print '===== The game is done.'
             self._before_turn_event()
             self._model.curr_state.attach(self._view)
             return
@@ -77,7 +78,7 @@ class GPController(Controller):
         print '===== GP MOVE'
         print 'opposition critierion: ', gp_opposition(self._model)
         print 'captures criterion: ', gp_num_of_captures(self._model)
-        print 'freedom criterion: ', gp_total_freedom(self._model)
+        print 'freedom criterion: ', gp_num_isolated_pieces(self._model)
         print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
         print 'move repr is: ', self.moves[0]
         step = 2 if len(move) > 2 else 1
