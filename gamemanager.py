@@ -48,10 +48,11 @@ class GameManager(object):
             self._controller1 = PlayerController(model=self.model,
                                                  view=self.view,
                                                  end_turn_event=self.turn_finished)
-            self._controller2 = AlphaBetaController(model=self.model,
+            self._controller2 = GPController(model=self.model,
                                                     view=self.view,
                                                     searchtime=think_time,
-                                                    end_turn_event=self.turn_finished)
+                                                    end_turn_event=self.turn_finished,
+                                                    fitness = lambda x: x)
             # swap controllers if White is selected as the player
             if self.player_color == WHITE:
                 self._controller1, self._controller2 = self._controller2, self._controller1

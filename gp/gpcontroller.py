@@ -11,6 +11,7 @@ class GPController(Controller):
     def __init__(self, **props):
         self._model = props['model']
         self._view = props['view']
+        self._lambda = props['fitness']
         self._before_turn_event = None
         self._end_turn_event = props['end_turn_event']
         self._highlights = []
@@ -81,6 +82,7 @@ class GPController(Controller):
         print 'freedom criterion: ', gp_num_isolated_pieces(self._model)
         print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
         print 'move repr is: ', self.moves[0]
+        print '# possible moves: ', len(self.moves)
         step = 2 if len(move) > 2 else 1
         # highlight remaining board squares used in move
         self._model.make_move(self.moves[0], None, True, True,

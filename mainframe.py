@@ -19,9 +19,8 @@ class MainFrame(object, CenteredWindow):
         # self.root.iconbitmap(RAVEN_ICON)
         self.root.title('Raven ' + VERSION)
         self.root.protocol('WM_DELETE_WINDOW', self._on_close)
-        self.training = True
-        self.thinkTime = IntVar(value=0.001) if self.training else IntVar(value=1)
-        self.manager = GameManager(root=self.root, parent=self, training=self.training)
+        self.thinkTime = IntVar(value=1)
+        self.manager = GameManager(root=self.root, parent=self, training=False)
         self.menubar = tk.Menu(self.root)
         self.create_game_menu()
         self.create_options_menu()
@@ -185,13 +184,7 @@ def start():
     mainframe.root.mainloop()
 
 if __name__=='__main__':
-    import statprof
-    statprof.start()
-    try:
         freeze_support()
         start()
-    finally:
-        statprof.stop()
-        statprof.display(open('prof_out', 'w+'))
 
 
