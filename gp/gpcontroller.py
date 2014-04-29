@@ -11,7 +11,7 @@ class GPController(Controller):
     def __init__(self, **props):
         self._model = props['model']
         self._view = props['view']
-        self._lambda = props['fitness']
+        self._fitness = props['fitness']
         self._before_turn_event = None
         self._end_turn_event = props['end_turn_event']
         self._highlights = []
@@ -63,7 +63,6 @@ class GPController(Controller):
         self._unregister_event_handlers()
         self._model.curr_state.detach(self._view)
 
-
     def _filter_moves(self, pos, moves, idx):
         del_list = []
         for i, m in enumerate(moves):
@@ -73,16 +72,19 @@ class GPController(Controller):
             del moves[i]
         return moves
 
-
     def _make_move(self):
         move = self.moves[0].affected_squares
         print '===== GP MOVE'
-        print 'opposition critierion: ', gp_opposition(self._model)
-        print 'captures criterion: ', gp_num_of_captures(self._model)
-        print 'freedom criterion: ', gp_num_isolated_pieces(self._model)
+        print 'opposition critierion: ', gp_opposition(self._model, GP_MAX)
+        print 'freedom criterion: ', gp_num_isolated_pieces(self._model, GP_MAX)
+        print 'legal moves:', gp_num_legal_moves(self._model, GP_MAX)
+        print 'legal min moves:', gp_num_legal_moves(self._model, GP_MIN)
+        print 'captures criterion: ', gp_num_of_captures(self._model, GP_MAX)
+
         print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
         print 'move repr is: ', self.moves[0]
         print '# possible moves: ', len(self.moves)
+        self._fitness(self._model)
         step = 2 if len(move) > 2 else 1
         # highlight remaining board squares used in move
         self._model.make_move(self.moves[0], None, True, True,

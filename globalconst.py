@@ -1,6 +1,10 @@
 import math, os, sys
 from ConfigParser import RawConfigParser
 
+#=== GP minimax
+GP_MIN = 0
+GP_MAX = 1
+
 DEFAULT_SIZE = 400
 BOARD_SIZE = 8
 CHECKER_SIZE = 30

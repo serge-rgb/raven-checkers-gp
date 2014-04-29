@@ -26,6 +26,7 @@ class GameManager(object):
                             statusbar=statusbar, invisible=True)
         if self.training:
             self.view.override_canvas(TrainingCanvas())
+            self.fitness = props['fitness']
         self.player_color = BLACK
         self.num_players = 1
         self.set_controllers()
@@ -52,14 +53,15 @@ class GameManager(object):
                                                     view=self.view,
                                                     searchtime=think_time,
                                                     end_turn_event=self.turn_finished,
-                                                    fitness = lambda x: x)
+                                                    fitness = self.fitness)
             # swap controllers if White is selected as the player
             if self.player_color == WHITE:
                 self._controller1, self._controller2 = self._controller2, self._controller1
         elif self.num_players == 1 and self.training:
             self._controller1 = GPController(model=self.model,
                                              view=self.view,
-                                             end_turn_event=self.turn_finished)
+                                             end_turn_event=self.turn_finished,
+                                             fitness = self.fitness)
             self._controller2 = AlphaBetaController(model=self.model,
                                                     view=self.view,
                                                     searchtime=think_time,
