@@ -1,4 +1,7 @@
 from globalconst import *
+
+from pyevolve import Consts
+
 #===============================================================================
 #  -- Terminal funcs
 #       model: Checkerboard
@@ -6,7 +9,16 @@ from globalconst import *
 #===============================================================================
 
 
-def gp_num_of_captures(model, mm):
+GENETIC_ALGORITHM = None  # Instance of
+
+def set_ga(ga):
+    global GENETIC_ALGORITHM
+    GENETIC_ALGORITHM = ga
+
+def is_maximize():
+    return GENETIC_ALGORITHM.getMinimax == Consts.minimaxType['maximize']
+
+def gp_num_of_captures(model):
     '0 if no captures...'
     captures = model.captures_available()
     if len(captures) > 0:
@@ -21,10 +33,11 @@ def gp_num_of_captures(model, mm):
     return 0
 
 
-def gp_num_legal_moves(model, mm):
+def gp_num_legal_moves(model):
     'num of squares to which we can move'
     player = model.curr_state.to_move
     l = 0
+    mm = GP_MAX if is_maximize() else GP_MIN
     if mm == GP_MAX:
         assert(player == BLACK)
         l = len(model.legal_moves())
@@ -35,11 +48,12 @@ def gp_num_legal_moves(model, mm):
     return l
 
 
-def gp_num_isolated_pieces(model, mm):
+def gp_num_isolated_pieces(model):
     return 0
 
 
-def gp_opposition(model, mm):
+def gp_opposition(model):
+    mm = GP_MAX if is_maximize() else GP_MIN
     if mm == GP_MAX:
         return model.curr_state.has_opposition(BLACK)
     else:
@@ -56,10 +70,12 @@ terminals = [
 #  -- Non-terminal funcs
 #===============================================================================
 
-def ngp_sum2(f1, f2):
-    def func(model, mm):
-        return f1(model, mm) + f2(model, mm)
+def ngp_sum(f1, f2):
+    def sum_func(model):
+        return f1(model) + f2(model)
+    return sum_func
 
 def ngp_reverse(f):
-    def func(model, mm):
-        return -f(model, mm)
+    def reverse_func(model):
+        return -f(model)
+    return reverse_func

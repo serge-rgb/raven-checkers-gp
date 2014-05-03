@@ -75,11 +75,11 @@ class GPController(Controller):
     def _make_move(self):
         move = self.moves[0].affected_squares
         print '===== GP MOVE'
-        print 'opposition critierion: ', gp_opposition(self._model, GP_MAX)
-        print 'freedom criterion: ', gp_num_isolated_pieces(self._model, GP_MAX)
-        print 'legal moves:', gp_num_legal_moves(self._model, GP_MAX)
-        print 'legal min moves:', gp_num_legal_moves(self._model, GP_MIN)
-        print 'captures criterion: ', gp_num_of_captures(self._model, GP_MAX)
+        print 'opposition critierion: ', gp_opposition(self._model)
+        print 'freedom criterion: ', gp_num_isolated_pieces(self._model)
+        print 'legal moves:', gp_num_legal_moves(self._model)
+        print 'legal min moves:', gp_num_legal_moves(self._model)
+        print 'captures criterion: ', gp_num_of_captures(self._model)
 
         print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
         print 'move repr is: ', self.moves[0]

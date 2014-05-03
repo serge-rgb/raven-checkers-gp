@@ -11,22 +11,21 @@ import pyevolve
 
 error_accum = Util.ErrorAccumulator()
 
-def fitness(model):
-    print 'i am fitness. I do nothing!'
-    return 0
-
 class TrainingContext():
-    def __init__(self):
+    def __init__(self, fitness_func):
         class ThinkTime:
             def get(self):
                 return 0.01
         self.thinkTime = ThinkTime()
-        self.manager = GameManager(root=None, parent=self, training=True, fitness = fitness)
+        self.manager = GameManager(root=None, parent=self, training=True, fitness = fitness_func)
 
 def eval_func(chromosome):
     global error_accum
     error_accum.reset()
     code_comp = chromosome.getCompiledCode()
+    fitness_func = eval(code_comp)
+    print 'func: ', fitness_func
+    ctx = TrainingContext(fitness_func)
     #
     # Do a series of games HERE =========
     #
@@ -42,6 +41,7 @@ def train():
     genome.evaluator +=  eval_func
 
     ga = GSimpleGA.GSimpleGA(genome)
+    set_ga(ga)
     # This method will catch and use every function that
     # begins with "gp", but you can also add them manually.
     # The terminals are Python variables, you can use the
@@ -54,11 +54,13 @@ def train():
     # You can even use a function call as terminal, like "func()"
     # and Pyevolve will use the result of the call as terminal
     ga.setMinimax(Consts.minimaxType["minimize"])
-    ga.setGenerations(10)
+    ga.setGenerations(20)
     ga.setCrossoverRate(1.0)
     ga.setMutationRate(0.08)
-    ga.setPopulationSize(20)
+    ga.setPopulationSize(3)
     ga(freq_stats=5)
+
+    set_ga(ga)
 
     print ga.bestIndividual()
 
