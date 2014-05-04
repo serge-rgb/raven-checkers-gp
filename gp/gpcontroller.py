@@ -3,6 +3,7 @@ from controller import Controller
 from globalconst import *
 from gp.trainingcanvas import TrainingCanvas
 from gp.criteria import *
+import copy
 
 
 # ASSUMPTION: GPController is black.
@@ -16,6 +17,7 @@ class GPController(Controller):
         self._end_turn_event = props['end_turn_event']
         self._highlights = []
         self._move_in_progress = False
+        self._count_turns = 0
 
     def _register_event_handlers(self):
         pass
@@ -48,8 +50,7 @@ class GPController(Controller):
         self._register_event_handlers()
         self._model.curr_state.attach(self._view)
 
-        if self._model.terminal_test():
-            print '===== The game is done.'
+        if self._model.terminal_test() or self._count_turns > 50:
             self._before_turn_event()
             self._model.curr_state.attach(self._view)
             return
@@ -73,22 +74,19 @@ class GPController(Controller):
         return moves
 
     def _make_move(self):
-        move = self.moves[0].affected_squares
-        print '===== GP MOVE'
-        print 'opposition critierion: ', gp_opposition(self._model)
-        print 'freedom criterion: ', gp_num_isolated_pieces(self._model)
-        print 'legal moves:', gp_num_legal_moves(self._model)
-        print 'legal min moves:', gp_num_legal_moves(self._model)
-        print 'captures criterion: ', gp_num_of_captures(self._model)
+        self._count_turns += 1
+        moves = copy.deepcopy(self.moves)
+        move = moves[0]
+        fitness = 0
+        for i in xrange(len(moves)):
+            self._model.make_move(self.moves[i])
+            f = self._fitness(self._model)
+            if fitness < f:
+                fitness = f
+                move = moves[i]
+            self._model.undo_move()
 
-        print 'Repr of the checkerboard: {}'.format(self._model.curr_state)
-        print 'move repr is: ', self.moves[0]
-        print '# possible moves: ', len(self.moves)
-        self._fitness(self._model)
-        step = 2 if len(move) > 2 else 1
-        # highlight remaining board squares used in move
-        self._model.make_move(self.moves[0], None, True, True,
-                              self._view.get_annotation())
+        self._model.make_move(move)
         # a new move obliterates any more redo's along a branch of the game tree
         self._model.curr_state.delete_redo_list()
         self._move_in_progress = False

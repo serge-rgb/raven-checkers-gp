@@ -15,9 +15,6 @@ def set_ga(ga):
     global GENETIC_ALGORITHM
     GENETIC_ALGORITHM = ga
 
-def is_maximize():
-    return GENETIC_ALGORITHM.getMinimax == Consts.minimaxType['maximize']
-
 def gp_num_of_captures(model):
     '0 if no captures...'
     captures = model.captures_available()
@@ -37,33 +34,23 @@ def gp_num_legal_moves(model):
     'num of squares to which we can move'
     player = model.curr_state.to_move
     l = 0
-    mm = GP_MAX if is_maximize() else GP_MIN
-    if mm == GP_MAX:
-        assert(player == BLACK)
-        l = len(model.legal_moves())
-    if mm == GP_MIN:
-        model.curr_state.to_move = WHITE
-        l = len(model.legal_moves())
-        model.curr_state.to_move = player
+    assert(player == WHITE)
+    l = len(model.legal_moves())
     return l
 
 
-def gp_num_isolated_pieces(model):
+def _gp_num_isolated_pieces(model):
     return 0
 
 
 def gp_opposition(model):
-    mm = GP_MAX if is_maximize() else GP_MIN
-    if mm == GP_MAX:
-        return model.curr_state.has_opposition(BLACK)
-    else:
-        return model.curr_state.has_opposition(WHITE)
+    return model.curr_state.has_opposition(BLACK)
 
 
 terminals = [
         "gp_opposition",
         "gp_num_legal_moves",
-        "gp_num_isolated_pieces",
+        #"gp_num_isolated_pieces",
         "gp_num_of_captures",
         ]
 #===============================================================================
@@ -75,7 +62,7 @@ def ngp_sum(f1, f2):
         return f1(model) + f2(model)
     return sum_func
 
-def ngp_reverse(f):
+def _ngp_reverse(f):
     def reverse_func(model):
         return -f(model)
     return reverse_func
