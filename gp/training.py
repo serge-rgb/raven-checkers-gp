@@ -12,6 +12,8 @@ import pyevolve
 error_accum = Util.ErrorAccumulator()
 NUM_MATCHES = 3.0
 
+
+
 class TrainingContext():
     def __init__(self, fitness_func):
         class ThinkTime:
@@ -35,7 +37,6 @@ def eval_func(chromosome):
 
 
 def train():
-
     import sys
     sys.setrecursionlimit(15000)
     'Play a match between a GPController and a alpha beta controller'
@@ -56,15 +57,19 @@ def train():
     # You can even use a function call as terminal, like "func()"
     # and Pyevolve will use the result of the call as terminal
     ga.setMinimax(Consts.minimaxType["minimize"])
-    ga.setGenerations(15)
+    ga.setGenerations(20)
     ga.setCrossoverRate(1.0)
     ga.setMutationRate(0.08)
     ga.setPopulationSize(20)
     ga.setMultiProcessing()
     set_ga(ga)
-    ga(freq_stats=5)
+    ga(freq_stats=1)
 
+    f = open('fitness_func.txt', 'w')
+    with f:
+        f.write(str(ga.bestIndividual()).split("Expression: ")[1])
     print ga.bestIndividual()
+    print '=========== python code written to fitness_func.txt'
 
 
 if __name__ == '__main__':

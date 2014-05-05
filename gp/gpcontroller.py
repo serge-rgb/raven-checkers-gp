@@ -7,6 +7,15 @@ import copy
 
 
 # ASSUMPTION: GPController is black.
+def get_fitness_func():
+    f = open("fitness_func.txt")
+    func = None
+    with f:
+        txt = f.readline()
+        print ".... Using fitness func: ", txt
+        func = eval(txt)
+    return func
+
 
 class GPController(Controller):
     def __init__(self, **props):
@@ -18,6 +27,8 @@ class GPController(Controller):
         self._highlights = []
         self._move_in_progress = False
         self._count_turns = 0
+        if not self._fitness:
+            self._fitness = get_fitness_func()
 
     def _register_event_handlers(self):
         pass
@@ -53,6 +64,7 @@ class GPController(Controller):
         if self._model.terminal_test() or self._count_turns > 50:
             self._before_turn_event()
             self._model.curr_state.attach(self._view)
+            # print self._model.curr_state
             return
         moves = self._model.legal_moves()
         self.moves = moves

@@ -1,0 +1,1 @@
+ngp_sum(ngp_squared(ngp_sum(ngp_sum(ngp_reverse(gp_num_of_captures), gp_num_legal_moves), gp_opposition)), ngp_reverse(gp_num_of_captures))

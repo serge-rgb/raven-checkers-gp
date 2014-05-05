@@ -1,3 +1,5 @@
+import math
+
 from globalconst import *
 
 from pyevolve import Consts
@@ -62,7 +64,19 @@ def ngp_sum(f1, f2):
         return f1(model) + f2(model)
     return sum_func
 
-def _ngp_reverse(f):
+def ngp_reverse(f):
     def reverse_func(model):
         return -f(model)
     return reverse_func
+
+def ngp_squared(f):
+    def squared_func(model):
+        x = f(model)
+        return x * x
+    return squared_func
+
+def _ngp_root(f):
+    def root_func(model):
+        x= f(model)
+        return math.sqrt(x)
+    return root_func
