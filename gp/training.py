@@ -61,7 +61,7 @@ def train():
     ga.setCrossoverRate(1.0)
     ga.setMutationRate(0.08)
     ga.setPopulationSize(20)
-    ga.setMultiProcessing()
+    # ga.setMultiProcessing()
     set_ga(ga)
     ga(freq_stats=1)
 

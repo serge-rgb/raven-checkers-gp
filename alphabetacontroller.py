@@ -18,7 +18,7 @@ class AlphaBetaController(Controller):
         self._before_turn_event = None
         if not isinstance(self._view.canvas, TrainingCanvas):
             self._parent_conn, self._conn = multiprocessing.Pipe()
-        self._term_event = multiprocessing.Event()
+            self._term_event = multiprocessing.Event()
         self.process = multiprocessing.Process()
         self._start_time = None
         self._call_id = 0
@@ -70,7 +70,7 @@ class AlphaBetaController(Controller):
             move = self._parent_conn.recv()
         # ----------------------------------------------------------------------
         else:  # We actually want to go fast
-            move = calc_move(self._model, self._trans_table, self._search_time, self._term_event, None)
+            move = calc_move(self._model, self._trans_table, self._search_time, None)
             #if self._model.curr_state.ok_to_move:
         self._before_turn_event()
 
@@ -110,9 +110,9 @@ def longest_of(moves):
             selected = move
     return selected
 
-def calc_move(model, table, search_time, term_event, conn):
+def calc_move(model, table, search_time, conn):
     move = None
-    term_event.clear()
+    # term_event.clear()
     captures = model.captures_available()
     if captures:
         time.sleep(0)
@@ -132,10 +132,10 @@ def calc_move(model, table, search_time, term_event, conn):
             checkpoint = curr_time
             curr_time = time.time()
             rem_time = search_time - (curr_time - checkpoint)
-            if term_event.is_set(): # a signal means terminate
-                term_event.clear()
-                move = None
-                break
+            # if term_event.is_set(): # a signal means terminate
+            #     term_event.clear()
+            #     move = None
+            #     break
             if (curr_time - start_time > search_time or
                ((curr_time - checkpoint) * 2) > rem_time or
                depth > MAXDEPTH):

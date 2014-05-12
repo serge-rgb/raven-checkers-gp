@@ -27,6 +27,7 @@ class GameManager(object):
                             statusbar=statusbar, invisible=True)
         if self.training:
             self.view.override_canvas(TrainingCanvas())
+            self.fitness = props['fitness']
 
         self.player_color = BLACK
         self.num_players = 1
