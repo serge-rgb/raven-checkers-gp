@@ -58,10 +58,10 @@ def train():
     # and Pyevolve will use the result of the call as terminal
     ga.setMinimax(Consts.minimaxType["minimize"])
     ga.setGenerations(20)
-    ga.setCrossoverRate(1.0)
+    ga.setCrossoverRate(0.9)
     ga.setMutationRate(0.08)
     ga.setPopulationSize(20)
-    # ga.setMultiProcessing()
+    ga.setMultiProcessing()
     set_ga(ga)
     ga(freq_stats=1)
 
@@ -71,7 +71,14 @@ def train():
     print ga.bestIndividual()
     print '=========== python code written to fitness_func.txt'
 
-
+PROFILE = True
 if __name__ == '__main__':
-    train()
+    if PROFILE:
+        import cProfile
+        fname = 'prof_data.pyprof'
+        profile = cProfile.Profile()
+        profile.run('train()')
+        profile.dump_stats(fname)
+    else:
+        train()
 
