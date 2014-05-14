@@ -38,7 +38,7 @@ Mi proyecto de servicio social es implementar un sistema que evolucione jugadore
 
 \subsection{Trabajo previo}
 \label{sub:trabajo_previo}
-No encontré publicaciones que hablaran de un proyecto con el mismo propósito que el mío, pero hay artículos relacionados. Un artículo de Sipper\cite{Sipper} se concentra en aplicar programación genética para evolucionar jugadores para varios juegos. Su jugador de backgammon, en particular, fue desarrollado con una estrategia similar a la de mi jugador de damas. Implementan un árbol de desición minimax y evolucionan la función que evalúa estados de juegos particulares. La diferencia entre su solución y la mía es que yo no estoy haciendo minimax.
+Un artículo de Sipper\cite{Sipper} se concentra en aplicar programación genética para evolucionar jugadores para varios juegos. Su jugador de backgammon, en particular, fue desarrollado con una estrategia similar a la de mi jugador de damas. Implementan un árbol de desición minimax y evolucionan la función que evalúa estados de juegos particulares. La diferencia entre su solución y la mía es que yo no estoy haciendo minimax.
 
 En otro articulo de Benbassat y Sipper\cite{Benbassat} se evoluciona con GP un jugador de "Lose-checkers": una versión de damas en la que la meta es perder todas las fichas. Los autores deciden que Lose-checkers es un juego más apropiado que Damas Inglesas porque no comparte el relativamente pequeño espacio de búsqueda del juego de Damas. Cabe notar que Damas es el juego más grande que ha sido "resuelto" formalmente. Se tomaron 18 años de tiempo de computo para explorar el espacio de búsqueda y se obtuvo una solución que garantiza un juego perfecto para ambos jugadores.
 
@@ -61,7 +61,7 @@ PyPy es una implementación de Python escrita en Python. Normalmente es mucho m�
 
 PyPy tiene varios benchmarks, y su media geometrica de mejora de desempeño sobre la implementación estándar de Python es de 6x. Hay programas que disfrutan de una mejora de más de 100x.
 
-El benchmark incluído en el motor de damas "raven checkers" corre 10 veces más rápido cuando se usa PyPy en lugar de CPython. Este resultado fue alentador pero no fue representativo del comportamiento del sistema final.
+El benchmark incluído en el motor de damas "raven checkers" corre 10 veces más rápido cuando se usa PyPy en lugar de CPython(la implementación estándar de Python). Este resultado fue alentador pero no fue representativo del comportamiento del sistema final.
 
 \section{Tecnologías}
 
@@ -74,7 +74,7 @@ PyEvolve es una biblioteca para hacer programación evolutiva en Python. Su últ
 Raven Checkers es un programa de damas inglesas escrito en Python. El algoritmo de inteligencia artificial es un árbol de búsqueda minimax con alpha-beta-pruning que usa varias heurísticas (escritas por humanos) para evaluar el estado del juego.
 La estructura del sistema está fuertemente ligada a la biblioteca Tk incluída en la distribución de Python.
 
-Cuenta con una abstracción del juego de Damas sobre la cual está implementado un jugador. Es un sistema minimax con muchas heurísticas basadas en el trabajo de Martin Fierz\cite{Fierz}
+Su sistema de heurísticas está basado en el trabajo de Martin Fierz\cite{Fierz}
 
 
 \section{Modificación de las bibliotecas existentes}
@@ -84,7 +84,7 @@ Raven Checkers, usado normalmente, inicia un juego entre el usuario y el jugador
 
 Tanto Raven Checkers como PyEvolve tienen un estilo muy dinámico de programación. Un patrón en particular que usan es no especificar argumentos a la funcion \verb+__init__+, sino usar el diccionario \verb+*props+ para accesar argumentos. Ejemplo: \verb+self._view = props['view']+. Esto le dio convenciencia al autor pero destruye por completo las optimizaciones que se especifican en \cite{structs_pypy}. Este estilo de programación no se limita a constructores, PyEvolve lo usa extensivamente.
 
-Una decisión de diseño de Raven Checkers fue no separar el código GUI de la lógica del juego. En general esto es mal diseño de software (se ignora el principio de "separation of concerns"), pero no tiene malas consecuencias para el propósito original, para mis propósitos esto causa problemas serios.
+Una decisión de diseño de Raven Checkers fue no separar el código GUI de la lógica del juego. Esto se ve como mal diseño de software pues se ignora el principio de "separation of concerns", pero no tiene malas consecuencias para el propósito original. Para mis propósitos esto causa problemas serios.
 
 Mi primer problema con Raven Checkers fue que cada partida de Damas tomaba más de un segundo, haciendola impráctica para una función de evaluación.
 
@@ -92,8 +92,9 @@ La manera más común, y la mejor soportada, de medir desempeño en sistemas esc
 
 La falta de separación entre el código GUI (usando el módulo Tk) y la lógica de Raven Checkers, hicieron que los cuellos de botella se escondieran detraz de un sistema de paso de mensajes, parte de Tk, que se usaba en todas las partes del programa. Tuve que hacer "cirugía" en las partes clave del código para que los verdaderos cuellos de botella aparecieran en los reportes de cProfile y de statprof. Tambien hubo una ligera ganancia de velocidad al dejar de hacer el trabajo extra que incurre usar un sistema complejo de paso de mensajes en lugar de hacer simples llamadas a función.
 
-Al levantar la capa de Tk, pude ver que una función estaba durmiendo el proceso y yo no me había dado cuenta. Esto debió de ser encontrado muy fácil, pero las llamadas de mensaje de Tk tapaban por completo los nombres de las funciones en donde realmente se estaba haciendo el trabajo. Quitar la llamada a dormir hizo que el engine fuera suficientemente rápido para implementar la estrategia.
+Al eliminar la capa de Tk, salió a la luz que una función estaba durmiendo el proceso. Esto debió de ser encontrado muy fácil, pero las llamadas de mensaje de Tk tapaban por completo los nombres de las funciones en donde realmente se estaba haciendo el trabajo. Eliminar las llamadas que hacían dormir al sistema fue suficiente para hacer que el motor fuera suficientemente rápido para implementar la estrategia.
 
+La dependencia de Tk no fue eliminada, la interfaz de usuario se mantuvo para poder hacer partidas humano-máquina contra los jugarores evolucionados.
 
 
 \subsection{Estrategia}
@@ -107,23 +108,41 @@ La función heurística toma un tablero y regresa un número. Se deriva de un pr
 
 Las funciones terminales son criterios simples sobre el estado del juego. Por ejemplo "Número de fichas capturadas", "numero de movidas legales".
 
-Las no terminales son un conjunto de funciones cuyo propósito es componer. La implementación final tiene \verb+sum+ (suma), \verb+squared+ (elevar al cuadrado) y \verb+reverse+ (multiplicar por -1) Hay lógicas: And y Or de distintas cardinalidades, y hay numéricas: Suma (de distintas cardinalidades) y Resta (solo de cardinalidad 2).
+Las no terminales son un conjunto de funciones cuyo propósito es componer. La implementación final tiene \verb+sum+ (suma), \verb+squared+ (elevar al cuadrado) y \verb+reverse+ (multiplicar por -1).
 
-De esta manera, un programa evolucionado es un árbol de composición de funciones; evaluar el programa resulta en una función que toma un estado de juego y regresa un número. La función heurística regresa el resultado de evaluar esa función.
+Un programa evolucionado es un árbol de composición de funciones; evaluar el programa resulta en una función que toma un estado de juego y regresa un número. La función heurística es el resultado de evaluar esa función contra los estados del juego (viendo una movida hacia adelante) y seleccionar la movida correspondiente al estado con el valor numerico más alto.
 
 El algoritmo genetico mantiene una población de 20 individuos y corre por 20 generaciones. La tasa de crossover es de 0.9 y la de mutación es de 0.08. Estos parámetros han dado buenos resultados. Tener 10 individuos o menos de población causa menos aprovechamiento de múltiples CPUs y resulta en más variabilidad en la calidad del individuo final.
 
 \subsection{Desempeño}
 \label{sub:desempeño}
 
+Como es de esperarse, el 98\% del tiempo de la evolución se gasta en la función de evaluación. La imagen \ref{img:gp} presenta un desgloze de la distribución de tiempos. 80.4\% del tiempo se gasta en el jugador existente, mientras que evaluar los individuos de la población toma el 15.6\%
+
 
 \includegraphics[width=400pt]{"./gp.png"}
+\label{img:gp}
 
-El caso de Tk no fue único en el que medir el desempeño de Python fue difícil. Usar múltiples procesos para aprovechar el paralelismo obscurese el código de la misma manera que usar Tk. PyPy se confunde usando cProfile en este sistema, sólo funciona con statprof. Las diferencias entre PyPy y CPython (la implementacion) estándar en la medición de desempeño tambien son ligeramente diferentes, pero no obtuve suficiente información para averiguar las razones.
+Obtener mayor granularidad de información en Python es posible, pero tedioso.
 
+El caso de Tk no fue único en el que medir el desempeño de Python fue difícil. Usar múltiples procesos para aprovechar el paralelismo obscurese el código de la misma manera que usar Tk. PyPy se confunde usando cProfile en este sistema, sólo funciona con statprof. Las diferencias entre PyPy y CPython (la implementacion estándar) en la medición de desempeño tambien son ligeramente diferentes, dado que sus maneras de interpretar el código escrito en Python son completamente diferentes.
 
+Una sorpresa que me lleve fue que el algoritmo corre más lento en PyPy que en CPython, por un factor de 1.5.
+PyPy es muy bueno optimizando código númerico -- es bueno convirtiendo objetos de python a primitivas del sistema y mapear funciones aritmeticas a sus respectivas operaciones en código máquina.
+Para código más simbólico, se vuelve más parecido a CPython, con el detalle de que hace optimización agresiva para acceso a miembros de clases\cite{structs_pypy}, que en CPython siempre se reduce a un par de búsquedas de diccionario.
+PyPy hace compilación a nivel del interprete\cite{jit_pypy}. Es decir, el JIT no está consciente del código que se está interpretando, está consciente de los bitecodes que se van interpretando y hay "hints" insertados por los desarrolladores del proyecto que indican cuando puede empezar y terminar un análisis de código potencialmente "caliente".
 
-Mi experiencia en este proyecto, en proyectos pasados, y de platicar con programador que esta trabajando en un juego de alto desempeño escrito en su mayor parte en Python me han dado suficiente información para tener una buena opinión informada acerca del tema de hacer Python rápido.
+Hay más de un ejemplo de programas no triviales que son más lentos en PyPy que en CPython y este es uno de ellos. Entre la gente que escribe programas de alto desempeño en Python se dice que hay que desarrollar un sistema desde un principio para escribir los módulos lentos en C en cuanto se vuelvan un problema. No creo que ese consejo aplique en un sistema como este. El cuello de botella es código altamente abstracto y simbólico; escribir un subconjunto en C sin cambiar fundamentalmente la representación de las estructuras de datos sería tedioso y propenso a errores.
+
+Hay que escoger la herramienta correcta para cada trabajo, y para cómputo no-numerico con fuertes restricciones de desempeño, Python es simplemente una mala opción. Hay muchos lenguajes de alto nivel con implementaciones rápidas que son mejores opciones para escribir este tipo de software.
+
+\subsection{Conclusiones}
+\label{sub:conclusiones}
+
+El propósito de este proyecto fue desarollar un sistema que evolucionara un jugador de Damas Inglesas con un enfoque a la eficiencia. He presentado un sistema que logra el cometido\cite{github} y a lo largo del desarrollo he hecho un análisis de sus propiedades con respecto a velocidad.
+
+Python es un lenguaje apto para software de alto desempeño en áreas como juegos y cómputo científico. Mi principal conclusión es que un área donde Python no es apto es en software de alto desempeño donde el principal trabajo que se realiza no es de naturaleza numerica.
+
 
 \begin{thebibliography}{32}
     \bibitem{Sipper}
