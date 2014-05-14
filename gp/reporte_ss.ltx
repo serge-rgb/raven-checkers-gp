@@ -1,0 +1,152 @@
+% !TEX TS-program = xelatex
+% !TEX encoding = UTF-8
+
+% This is a simple template for a XeLaTeX document using the "article" class,
+% with the fontspec package to easily select fonts.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage{fontspec} % Font selection for XeLaTeX; see fontspec.pdf for documentation
+\defaultfontfeatures{Mapping=tex-text} % to support TeX conventions like ``---''
+\usepackage{xunicode} % Unicode support for LaTeX character names (accents, European chars, etc)
+\usepackage{xltxtra} % Extra customizations for XeLaTeX
+\usepackage{amssymb}
+
+%\setmainfont{Charis SIL} % set the main body font (\textrm), assumes Charis SIL is installed
+%\setsansfont{Deja Vu Sans}
+%\setmonofont{Deja Vu Mono}
+
+% other LaTeX packages.....
+\usepackage{geometry} % See geometry.pdf to learn the layout options. There are lots.
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+%\usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+\title{Servicio Social: Reporte final}
+\author{Sergio González}
+\date{12 de Mayo de 2014} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed
+
+\begin{document}
+\maketitle
+
+\section{Introducción}
+\label{sec:introduccion}
+
+Mi proyecto de servicio social es implementar un sistema que evolucione jugadores de damas inglesas mediante programación genética, con un énfasis en el análisis del desempeño y una implementación eficiente.
+
+\subsection{Trabajo previo}
+\label{sub:trabajo_previo}
+No encontré publicaciones que hablaran de un proyecto con el mismo propósito que el mío, pero hay artículos relacionados. Un artículo de Sipper\cite{Sipper} se concentra en aplicar programación genética para evolucionar jugadores para varios juegos. Su jugador de backgammon, en particular, fue desarrollado con una estrategia similar a la de mi jugador de damas. Implementan un árbol de desición minimax y evolucionan la función que evalúa estados de juegos particulares. La diferencia entre su solución y la mía es que yo no estoy haciendo minimax.
+
+En otro articulo de Benbassat y Sipper\cite{Benbassat} se evoluciona con GP un jugador de "Lose-checkers": una versión de damas en la que la meta es perder todas las fichas. Los autores deciden que Lose-checkers es un juego más apropiado que Damas Inglesas porque no comparte el relativamente pequeño espacio de búsqueda del juego de Damas. Cabe notar que Damas es el juego más grande que ha sido "resuelto" formalmente. Se tomaron 18 años de tiempo de computo para explorar el espacio de búsqueda y se obtuvo una solución que garantiza un juego perfecto para ambos jugadores.
+
+Otro trabajo\cite{Mukherjee} desarolla un sistema que evoluciona jugadores de damas chinas. Su método, como el de backgammon de Benbassat, es implementar minimax (con alpha-beta-pruning) y evolucionar la función heurística que evalúa el tablero.
+
+\section{Elección de lenguaje}
+\label{sec:eleccion_de_lenguaje}
+
+La homoiconicidad es la propiedad de que la estructura de datos que se usa para representar un programa es la misma que su árbol de sintaxis abstracta; Lisp tiene esta propiedad. Tiene sentido usar Lisp para programación genética porque el lenguaje trabaja naturalmente con listas, y los programas escritos en Lisp son listas que representan el árbol de sintáxis. En Lisp, la línea entre compilación y ejecución es borrosa, es cosa común hacer "programas que escriban programas". Mucha gente le llama el "lenguaje de programación programable".
+
+Hay implementaciones muy eficientes de Common Lisp. En particular, SBCL corre en todas las plataformas modernas (con algunos problemas en Windows) y se compila a código máquina dinámicamente.
+
+SBCL es famoso por tener tiempos de compilación lentos, y esto es relevante para programación genética, donde se compilan constantemente nuevos miembros de la población. La realidad es que cualquier función de evaluación moderadamente compleja rápidamente se convierte en el cuello de botella, haciendo negligible el tiempo de compilación. En un sistema de este tipo, donde una evaluación involucra correr varios juegos de damas, no está fuera de lo razonable considerar un sistema que genere y compile código en C (o cualquier lenguaje de bajo nivel) para tener una mejora de desempeño. Desafortunadamente para este caso en particular, casi el 90\% del tiempo en la función de evaluación lo ocupa el jugador existente de damas, del que escribo más adelante.
+
+Otra ventaja de SBCL es que cuenta con extensiones al lenguaje que permiten hacer optimizaciones de bajo nivel, como especificar que ciertas estructuras se guarden en el stack y no en el heap para así evitar el problema que tienen los lenguajes dinámicos de hacer demasiados alojamientos pequeños de memoria.
+
+Aunque la homoiconicidad es una ventaja, no lo es lo suficiente para compensar por el precio que se paga en legibilidad y varias otras ventajas que tiene Python al contar con una base de usuarios mucho mayor. En particular, el único sistema de código abierto de damas inglesas que encontré en Internet está escrito en Python, y me basé en él para entrenar a un nuevo jugador.
+
+PyPy es una implementación de Python escrita en Python. Normalmente es mucho más eficiente que la implementación de referencia de Python porque hace muchas cosas inteligentes como compilación "Just in Time"\cite{jit_pypy} y optimización de estructuras\cite{structs_pypy}, en donde por debajo de la mesa cambia la semantica de Python (en donde todo es dicconarios) para permitir que las cosas que se usen al estilo \verb+struct+ de C disfruten de mejor desempeño. PyPy también hace "escape analysis" para evitar alojamientos innecesarios de memoria.
+
+PyPy tiene varios benchmarks, y su media geometrica de mejora de desempeño sobre la implementación estándar de Python es de 6x. Hay programas que disfrutan de una mejora de más de 100x.
+
+El benchmark incluído en el motor de damas "raven checkers" corre 10 veces más rápido cuando se usa PyPy en lugar de CPython. Este resultado fue alentador pero no fue representativo del comportamiento del sistema final.
+
+\section{Tecnologías}
+
+\subsection{PyEvolve}
+\label{sub:pyevolve}
+PyEvolve es una biblioteca para hacer programación evolutiva en Python. Su última versión tiene mecanismos para hacer programación genética. Es una gran conveniencia que hace que la programación genética sea cuestión de especificar las funciones y tasas de mutación y crossover. Tiene mucha granularidad para controlar la evolución, pero si eso no es suficiente, puede modificarse libremente.
+
+\subsection{Raven Checkers}
+\label{sub:raven_checkers}
+Raven Checkers es un programa de damas inglesas escrito en Python. El algoritmo de inteligencia artificial es un árbol de búsqueda minimax con alpha-beta-pruning que usa varias heurísticas (escritas por humanos) para evaluar el estado del juego.
+La estructura del sistema está fuertemente ligada a la biblioteca Tk incluída en la distribución de Python.
+
+Cuenta con una abstracción del juego de Damas sobre la cual está implementado un jugador. Es un sistema minimax con muchas heurísticas basadas en el trabajo de Martin Fierz\cite{Fierz}
+
+
+\section{Modificación de las bibliotecas existentes}
+Mi proyecto es un "fork" de raven-checkers\cite{github}. Raven Checkers contiene un jugador artificial, mi "fork" está modificado para agregar un nuevo jugador que utilize funciones de evaluación específicas.
+
+Raven Checkers, usado normalmente, inicia un juego entre el usuario y el jugador artificial, la versión final de mi fork sustituye al jugador artificial existente por el nuevo jugador artificial, utilizando la función de evolución guardada a disco despues de una sesión de entrenamiento.
+
+Tanto Raven Checkers como PyEvolve tienen un estilo muy dinámico de programación. Un patrón en particular que usan es no especificar argumentos a la funcion \verb+__init__+, sino usar el diccionario \verb+*props+ para accesar argumentos. Ejemplo: \verb+self._view = props['view']+. Esto le dio convenciencia al autor pero destruye por completo las optimizaciones que se especifican en \cite{structs_pypy}. Este estilo de programación no se limita a constructores, PyEvolve lo usa extensivamente.
+
+Una decisión de diseño de Raven Checkers fue no separar el código GUI de la lógica del juego. En general esto es mal diseño de software (se ignora el principio de "separation of concerns"), pero no tiene malas consecuencias para el propósito original, para mis propósitos esto causa problemas serios.
+
+Mi primer problema con Raven Checkers fue que cada partida de Damas tomaba más de un segundo, haciendola impráctica para una función de evaluación.
+
+La manera más común, y la mejor soportada, de medir desempeño en sistemas escritos en Python es usar los modulos statprof y cProfile para detectar los cuallos de botella.
+
+La falta de separación entre el código GUI (usando el módulo Tk) y la lógica de Raven Checkers, hicieron que los cuellos de botella se escondieran detraz de un sistema de paso de mensajes, parte de Tk, que se usaba en todas las partes del programa. Tuve que hacer "cirugía" en las partes clave del código para que los verdaderos cuellos de botella aparecieran en los reportes de cProfile y de statprof. Tambien hubo una ligera ganancia de velocidad al dejar de hacer el trabajo extra que incurre usar un sistema complejo de paso de mensajes en lugar de hacer simples llamadas a función.
+
+Al levantar la capa de Tk, pude ver que una función estaba durmiendo el proceso y yo no me había dado cuenta. Esto debió de ser encontrado muy fácil, pero las llamadas de mensaje de Tk tapaban por completo los nombres de las funciones en donde realmente se estaba haciendo el trabajo. Quitar la llamada a dormir hizo que el engine fuera suficientemente rápido para implementar la estrategia.
+
+
+
+\subsection{Estrategia}
+\label{sub:estrategia}
+
+La función heurística toma un tablero y regresa un número. Se deriva de un programa evolucionado. Los programas se definen asi:
+
+\emph{Funciones terminales} \(\lambda:M \to \mathbb{Z} \) Toman un estado de juego y regresan un entero.
+
+\emph{Funciones no terminales} \(F:\lambda[] \to \lambda\) Toman una lista de funciones y regresan una funcion.
+
+Las funciones terminales son criterios simples sobre el estado del juego. Por ejemplo "Número de fichas capturadas", "numero de movidas legales".
+
+Las no terminales son un conjunto de funciones cuyo propósito es componer. La implementación final tiene \verb+sum+ (suma), \verb+squared+ (elevar al cuadrado) y \verb+reverse+ (multiplicar por -1) Hay lógicas: And y Or de distintas cardinalidades, y hay numéricas: Suma (de distintas cardinalidades) y Resta (solo de cardinalidad 2).
+
+De esta manera, un programa evolucionado es un árbol de composición de funciones; evaluar el programa resulta en una función que toma un estado de juego y regresa un número. La función heurística regresa el resultado de evaluar esa función.
+
+El algoritmo genetico mantiene una población de 20 individuos y corre por 20 generaciones. La tasa de crossover es de 0.9 y la de mutación es de 0.08. Estos parámetros han dado buenos resultados. Tener 10 individuos o menos de población causa menos aprovechamiento de múltiples CPUs y resulta en más variabilidad en la calidad del individuo final.
+
+\subsection{Desempeño}
+\label{sub:desempeño}
+
+
+\includegraphics[width=400pt]{"./gp.png"}
+
+El caso de Tk no fue único en el que medir el desempeño de Python fue difícil. Usar múltiples procesos para aprovechar el paralelismo obscurese el código de la misma manera que usar Tk. PyPy se confunde usando cProfile en este sistema, sólo funciona con statprof. Las diferencias entre PyPy y CPython (la implementacion) estándar en la medición de desempeño tambien son ligeramente diferentes, pero no obtuve suficiente información para averiguar las razones.
+
+
+
+Mi experiencia en este proyecto, en proyectos pasados, y de platicar con programador que esta trabajando en un juego de alto desempeño escrito en su mayor parte en Python me han dado suficiente información para tener una buena opinión informada acerca del tema de hacer Python rápido.
+
+\begin{thebibliography}{32}
+    \bibitem{Sipper}
+        Sipper, Azaria et al. \emph{Attaining Human-Competitive Game Playing with Genetic Programming}
+
+    \bibitem{Benbassat}
+        Benbassat, Sipper. \emph{Evolving Lose-Checkers Players using Genetic Programming}
+        http://www.cs.bgu.ac.il/~sipper/papabs/BeSi2010-revised.pdf
+    \bibitem{Mukherjee}
+        Mukherjee. \emph{A Genetic Programming Approach to Modified Chinese Checkers}
+    \bibitem{structs_pypy}
+        http://cs4701.wikispaces.com/file/view/4701+final+report.pdf
+        C.F. Bolz, A. Cuni, \emph{Runtime Feedback in a Meta-Tracing JIT for Efficient Dynamic Languages} https://bitbucket.org/pypy/extradoc/raw/extradoc/talk/icooolps2011/jit-hints.pdf
+    \bibitem{jit_pypy}
+        \emph{Motivating JIT Compiler Generation}
+        http://doc.pypy.org/en/latest/jit/overview.html
+    \bibitem{github}
+        El código de mi proyecto. Código relevante en la carpeta "gp"
+        \emph{https://github.com/bigmonachus/raven-checkers-gp}
+    \bibitem{Fierz}
+        Martin Fierz's Checkerboard.
+        \emph{http://www.fierz.ch/checkers.htm}
+
+\end{thebibliography}
+
+\end{document}
